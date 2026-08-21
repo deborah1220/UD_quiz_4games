@@ -1,0 +1,1332 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UD 게임센터 — 유니버설 디자인 학습 게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#111418;
+  --paper:#ffffff;
+  --field:#eef1f6;
+  --line:#111418;
+  --yellow:#ffd400;
+  --purple:#7a5cff;
+  --orange:#ff6b00;
+  --blue:#0057ff;
+  --pink:#ff2e63;
+  --ok:#00a35f;
+  --no:#e5104a;
+  --muted:#5c6672;
+  --accent:var(--blue);
+  --r:16px;
+}
+*{box-sizing:border-box}
+button,.token,.mcard{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;user-select:none;
+  -webkit-appearance:none;appearance:none;
+}
+#errbar{
+  position:fixed;left:0;right:0;top:0;z-index:99999;
+  background:#e5104a;color:#fff;font-size:13px;font-weight:700;
+  padding:9px 12px;display:none;word-break:break-all;
+}
+html,body{margin:0}
+body{
+  background:var(--field);
+  color:var(--ink);
+  font-family:"Pretendard Variable",Pretendard,"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;
+  font-size:18px;
+  font-weight:500;
+  line-height:1.55;
+  -webkit-text-size-adjust:100%;
+}
+button,input{font:inherit;color:inherit}
+h1,h2,h3{margin:0;font-weight:900;letter-spacing:-.02em}
+.display{font-family:"Black Han Sans","Noto Sans KR",sans-serif;font-weight:400;letter-spacing:0}
+.hidden{display:none!important}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:4px}
+
+/* ── 점자블록 띠 : 이 화면의 시그니처 ── */
+.tactile{
+  height:16px;
+  background:
+    radial-gradient(circle at 8px 8px,#111418 0 3.2px,transparent 3.6px) 0 0/16px 16px,
+    var(--yellow);
+  border-top:3px solid var(--ink);
+  border-bottom:3px solid var(--ink);
+}
+
+/* ── 헤더 : 공공 안내표지 ── */
+.signbar{
+  background:var(--ink);color:#fff;
+  padding:14px 18px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.sigil{
+  width:60px;height:60px;flex:none;
+  background:var(--yellow);color:var(--ink);
+  border-radius:10px;
+  display:grid;place-items:center;
+  font-family:"Black Han Sans",sans-serif;font-size:27px;
+}
+.signbar .titles{flex:1;min-width:150px}
+.eyebrow{
+  font-size:13px;font-weight:900;letter-spacing:.18em;
+  color:var(--yellow);text-transform:uppercase;
+}
+.signbar h1{font-size:clamp(24px,5.2vw,34px);color:#fff}
+.rankbtn{
+  background:var(--yellow);border:3px solid var(--yellow);color:var(--ink);
+  font-weight:900;font-size:17px;padding:12px 18px;border-radius:12px;cursor:pointer;
+  display:flex;align-items:center;gap:7px;
+}
+.rankbtn:hover{background:#fff;border-color:#fff}
+.iconbtn{padding:12px 14px;font-size:19px}
+.iconbtn.off{background:#39414c;border-color:#39414c;color:#93a0ae}
+
+.wrap{max-width:940px;margin:0 auto;padding:22px 16px 60px}
+
+/* ── 카드 · 블록 ── */
+.card{
+  background:var(--paper);
+  border:3px solid var(--line);
+  border-radius:var(--r);
+  box-shadow:6px 6px 0 var(--ink);
+  padding:22px;
+  margin-bottom:22px;
+}
+.step{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.stepno{
+  width:30px;height:30px;flex:none;border-radius:8px;
+  background:var(--ink);color:#fff;
+  display:grid;place-items:center;font-weight:900;font-size:17px;
+}
+.step h2{font-size:23px}
+.hint{color:var(--muted);font-size:16px;margin:2px 0 18px 42px}
+@media(max-width:520px){.hint{margin-left:0}}
+
+/* ── 입력 ── */
+.idgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.fieldwrap{display:flex;flex-direction:column;gap:5px}
+.fieldwrap label{font-size:14px;font-weight:900;color:var(--muted)}
+.idgrid input{
+  width:100%;padding:15px 10px;font-size:19px;
+  border:3px solid var(--ink);border-radius:12px;background:#fff;
+  text-align:center;font-weight:700;
+}
+.idgrid input::placeholder{color:#b3bcc7;font-weight:500}
+.idgrid input:focus{background:#fffbe6}
+@media(max-width:520px){.idgrid{grid-template-columns:1fr 1fr}}
+
+/* ── 판수 선택 ── */
+.counts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.pick{
+  border:3px solid var(--ink);border-radius:12px;background:#fff;
+  padding:14px 8px;cursor:pointer;text-align:center;
+  transition:transform .12s,box-shadow .12s,background .12s;
+}
+.pick .n{display:block;font-family:"Black Han Sans",sans-serif;font-size:32px;line-height:1.1}
+.pick .b{display:block;font-size:14px;font-weight:900;color:var(--muted);margin-top:3px}
+.pick:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.pick.on{background:var(--yellow);transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.pick.on .b{color:var(--ink)}
+
+/* ── 게임 타일 ── */
+.games{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gamecard{
+  position:relative;overflow:hidden;
+  border:3px solid var(--ink);border-radius:14px;background:#fff;
+  padding:16px;cursor:pointer;text-align:left;
+  transition:transform .12s,box-shadow .12s;
+}
+.gamecard:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.gamecard .ico{
+  width:50px;height:50px;border-radius:10px;background:var(--c);
+  display:grid;place-items:center;font-size:25px;margin-bottom:11px;
+  border:3px solid var(--ink);
+}
+.gamecard b{display:block;font-size:20px;font-weight:900}
+.gamecard .small{display:block;font-size:15px;color:var(--muted);margin-top:4px}
+.gamecard .mark{
+  position:absolute;top:0;right:0;
+  width:0;height:0;border-style:solid;border-width:0 44px 44px 0;
+  border-color:transparent var(--c) transparent transparent;
+  opacity:0;transition:opacity .15s;
+}
+.gamecard .mark:after{
+  content:"✔";position:absolute;left:20px;top:2px;color:#fff;font-size:15px;font-weight:900;
+}
+.gamecard.on{background:color-mix(in srgb,var(--c) 12%,#fff);box-shadow:5px 5px 0 var(--c);transform:translate(-2px,-2px)}
+.gamecard.on .mark{opacity:1}
+@media(max-width:520px){.games{grid-template-columns:1fr}}
+
+/* ── 시작 바 ── */
+.startbar{
+  margin:22px 0 0;padding:0;
+  display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+}
+.startbar .primary{flex:none}
+.startbar .status{flex:1;font-size:15px;font-weight:700;color:var(--muted)}
+.primary{
+  border:3px solid var(--ink);background:var(--ink);color:#fff;
+  font-weight:900;font-size:19px;border-radius:14px;padding:16px 28px;cursor:pointer;
+  box-shadow:5px 5px 0 var(--yellow);
+  transition:transform .12s,box-shadow .12s;
+}
+.primary:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--yellow)}
+.primary:active:not(:disabled){transform:translate(2px,2px);box-shadow:2px 2px 0 var(--yellow)}
+.primary:disabled{background:#c8d0da;border-color:#c8d0da;box-shadow:none;color:#7d8896;cursor:not-allowed}
+.secondary{
+  border:3px solid var(--ink);background:#fff;color:var(--ink);
+  font-weight:900;font-size:17px;border-radius:12px;padding:12px 18px;cursor:pointer;
+}
+.secondary:hover{background:var(--yellow)}
+
+/* ── 플레이 화면 ── */
+#play{padding:0;overflow:hidden;border-color:var(--accent);box-shadow:6px 6px 0 var(--accent)}
+.hud{
+  background:var(--accent);color:#fff;
+  padding:13px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  border-bottom:3px solid var(--ink);
+}
+.hud .gname{font-weight:900;font-size:19px;flex:1;min-width:120px}
+.chip{
+  background:#fff;color:var(--ink);border-radius:999px;
+  padding:7px 15px;font-weight:900;font-size:16px;font-variant-numeric:tabular-nums;
+}
+.chip.warn{background:var(--no);color:#fff;animation:pulse .8s infinite}
+@keyframes pulse{50%{transform:scale(1.09)}}
+.combo{background:var(--yellow);color:var(--ink)}
+
+/* 점자블록형 진행 표시 */
+.dots{
+  display:flex;gap:6px;flex-wrap:wrap;
+  padding:12px 18px;background:var(--yellow);border-bottom:3px solid var(--ink);
+}
+.dot{
+  width:16px;height:16px;border-radius:50%;
+  border:3px solid var(--ink);background:transparent;
+  transition:background .2s,transform .2s;
+}
+.dot.done{background:var(--ink)}
+.dot.now{transform:scale(1.35);background:#fff}
+
+.arena{padding:22px 18px}
+.qtitle{
+  font-family:"Black Han Sans",sans-serif;
+  font-size:clamp(24px,5vw,34px);line-height:1.35;
+  margin:0 0 18px;word-break:keep-all;
+}
+.qtitle .hl{
+  background:linear-gradient(transparent 58%,var(--yellow) 58%);
+  padding:0 3px;
+}
+
+/* 선택지 */
+.options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{
+  display:flex;align-items:center;gap:12px;text-align:left;
+  border:3px solid var(--ink);border-radius:14px;background:#fff;
+  padding:17px;cursor:pointer;font-weight:700;font-size:18px;
+  transition:transform .12s,box-shadow .12s,background .12s;
+}
+.opt .key{
+  width:32px;height:32px;flex:none;border-radius:8px;
+  background:var(--field);display:grid;place-items:center;
+  font-size:15px;font-weight:900;
+}
+.opt:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--accent)}
+.opt:disabled{cursor:default}
+.opt.ok{background:var(--ok);color:#fff;border-color:var(--ink)}
+.opt.ok .key{background:#fff;color:var(--ok)}
+.opt.no{background:var(--no);color:#fff;animation:shake .3s}
+.opt.no .key{background:#fff;color:var(--no)}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@media(max-width:600px){.options{grid-template-columns:1fr}}
+
+/* 3-Link */
+.linkgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.col h3{
+  font-size:15px;text-align:center;padding:7px;border-radius:9px;
+  background:var(--ink);color:#fff;margin-bottom:9px;
+}
+.token{
+  border:3px solid var(--ink);border-radius:12px;background:#fff;
+  padding:14px;margin-bottom:10px;cursor:pointer;font-weight:700;font-size:16px;
+  transition:transform .12s,background .12s;
+}
+.token:hover{transform:translate(-2px,-2px)}
+.token.sel{background:var(--yellow);transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.token.ok{background:var(--ok);color:#fff}
+.token.no{background:var(--no);color:#fff;animation:shake .3s}
+@media(max-width:700px){.linkgrid{grid-template-columns:1fr}.col{margin-bottom:6px}}
+
+/* 단어 짝맞추기 보드 */
+.boardhead{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  margin-bottom:12px;font-size:14px;font-weight:900;color:var(--muted);
+}
+.matchboard{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mcol{display:flex;flex-direction:column;gap:10px}
+.mcol .lab{
+  font-size:13px;font-weight:900;text-align:center;padding:7px;
+  border-radius:9px;background:var(--ink);color:#fff;
+}
+.mcard{
+  border:3px solid var(--ink);border-radius:12px;background:#fff;
+  padding:14px 10px;min-height:64px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  font-weight:800;font-size:17px;word-break:keep-all;line-height:1.35;
+  transition:transform .12s,box-shadow .12s,background .12s;
+}
+.mcard.en{font-family:"Noto Sans KR",system-ui,sans-serif}
+.mcard:hover:not(.ok){transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--accent)}
+.mcard.sel{background:var(--yellow);transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.mcard.ok{background:var(--ok);color:#fff;opacity:.5;cursor:default;transform:none;box-shadow:none}
+.mcard.no{background:var(--no);color:#fff;animation:shake .3s}
+@media(max-width:420px){.mcard{font-size:15px;padding:12px 7px;min-height:58px}}
+
+/* Target */
+.target{
+  border:3px solid var(--ink);border-radius:14px;background:var(--pink);color:#fff;
+  padding:22px;text-align:center;margin-bottom:18px;
+}
+.target .lab{font-size:14px;font-weight:900;letter-spacing:.14em;opacity:.85}
+.target .who{font-family:"Black Han Sans",sans-serif;font-size:clamp(26px,5.6vw,40px);margin-top:7px}
+
+/* 피드백 배너 */
+.feedback{
+  min-height:54px;margin:16px 18px 20px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  font-weight:900;font-size:19px;
+}
+.feedback.show-ok{background:var(--ok);color:#fff;border:3px solid var(--ink)}
+.feedback.show-no{background:var(--no);color:#fff;border:3px solid var(--ink)}
+
+/* 결과 */
+.gradebadge{
+  width:132px;height:132px;margin:4px auto 12px;
+  border:5px solid var(--ink);border-radius:26px;background:var(--yellow);
+  display:grid;place-items:center;box-shadow:7px 7px 0 var(--ink);
+}
+.gradebadge .g{font-family:"Black Han Sans",sans-serif;font-size:70px;line-height:1}
+.gradelabel{font-weight:900;font-size:22px;text-align:center}
+.bigscore{
+  font-family:"Black Han Sans",sans-serif;
+  font-size:clamp(48px,10vw,72px);text-align:center;line-height:1.1;
+  font-variant-numeric:tabular-nums;
+}
+.center{text-align:center}
+.resultgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+.scorebox{
+  border:3px solid var(--ink);border-radius:12px;padding:13px;background:#fff;
+  border-left-width:11px;border-left-color:var(--c);
+}
+.scorebox .t{font-size:15px;font-weight:900;color:var(--muted)}
+.scorebox .v{font-family:"Black Han Sans",sans-serif;font-size:32px;font-variant-numeric:tabular-nums}
+.scorebox .v small{font-size:15px;color:var(--muted);font-family:inherit}
+@media(max-width:520px){.resultgrid{grid-template-columns:1fr}}
+.metaline{text-align:center;font-weight:700;font-size:17px;margin-top:10px}
+.metaline b{background:var(--yellow);padding:2px 7px;border-radius:6px}
+.small{font-size:15px;color:var(--muted)}
+
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{background:var(--ink);color:#fff;padding:12px 8px;font-size:15px}
+th:first-child{border-radius:9px 0 0 0}th:last-child{border-radius:0 9px 0 0}
+td{padding:13px 8px;border-bottom:2px solid var(--field);text-align:center;font-weight:700;font-size:16px}
+tr.me td{background:var(--yellow)}
+
+/* 랭킹 모달 */
+.modal{position:fixed;inset:0;z-index:9999;background:#111418d9;padding:14px;overflow:auto}
+.modalbox{
+  max-width:880px;margin:24px auto;background:#fff;
+  border:3px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:8px 8px 0 var(--yellow);
+}
+.modalhead{background:var(--ink);color:#fff;padding:16px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.modalhead h2{flex:1;font-size:24px;min-width:140px}
+.modalbody{padding:20px}
+.filters{display:flex;gap:9px;margin-bottom:14px;flex-wrap:wrap}
+.filter{
+  border:3px solid var(--ink);border-radius:999px;background:#fff;
+  padding:10px 18px;font-weight:900;cursor:pointer;font-size:16px;
+}
+.filter.on{background:var(--ink);color:#fff}
+.conn{font-size:14px;font-weight:900;color:var(--yellow)}
+
+.credit{
+  margin-top:34px;text-align:center;
+  font-size:15px;font-weight:900;letter-spacing:.02em;color:var(--muted);
+}
+.credit:before{
+  content:"";display:block;width:64px;height:5px;margin:0 auto 12px;
+  border-radius:99px;background:var(--yellow);border:2px solid var(--ink);
+}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<div id="errbar"></div>
+<header class="signbar">
+  <div class="sigil">UD</div>
+  <div class="titles">
+    <div class="eyebrow">Universal Design</div>
+    <h1>UD 게임센터</h1>
+  </div>
+  <button id="muteBtn" class="rankbtn iconbtn" aria-pressed="false" title="효과음 켜기/끄기">🔊</button>
+  <button id="openLiveRank" class="rankbtn">🏆 랭킹판</button>
+</header>
+<div class="tactile"></div>
+
+<div class="wrap">
+
+  <!-- ══ 설정 ══ -->
+  <section id="setup">
+    <div class="card">
+      <div class="step"><div class="stepno">1</div><h2>누구인가요?</h2></div>
+      <p class="hint">랭킹판에 표시할 정보예요.</p>
+      <div class="idgrid">
+        <div class="fieldwrap"><label for="grade">학년</label><input id="grade" inputmode="numeric" maxlength="1" placeholder="1"></div>
+        <div class="fieldwrap"><label for="classNo">반</label><input id="classNo" inputmode="numeric" maxlength="2" placeholder="3"></div>
+        <div class="fieldwrap"><label for="studentNo">번호</label><input id="studentNo" inputmode="numeric" maxlength="2" placeholder="12"></div>
+        <div class="fieldwrap"><label for="player">이름</label><input id="player" maxlength="12" placeholder="홍길동"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="step"><div class="stepno">2</div><h2>몇 판 도전할까요?</h2></div>
+      <p class="hint">많이 도전할수록 랭킹 보너스가 커집니다. 아래에서 게임을 골라도 자동으로 맞춰집니다.</p>
+      <div class="counts">
+        <button class="pick" data-n="1"><span class="n">1</span><span class="b">보너스 +0</span></button>
+        <button class="pick" data-n="2"><span class="n">2</span><span class="b">보너스 +3</span></button>
+        <button class="pick" data-n="3"><span class="n">3</span><span class="b">보너스 +6</span></button>
+        <button class="pick" data-n="4"><span class="n">4</span><span class="b">보너스 +10</span></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="step"><div class="stepno">3</div><h2>게임 고르기</h2></div>
+      <p class="hint" id="chooseText">하고 싶은 게임을 눌러 고르세요. 최대 4개.</p>
+      <div class="games">
+        <button class="gamecard" data-game="link" style="--c:var(--purple)">
+          <span class="mark"></span>
+          <span class="ico">🔗</span>
+          <b>3단 연결</b>
+          <span class="small">한글 · 영어 · 뜻을 짝짓기 (5판)</span>
+        </button>
+        <button class="gamecard" data-game="speed" style="--c:var(--orange)">
+          <span class="mark"></span>
+          <span class="ico">⚡</span>
+          <b>스피드 매치</b>
+          <span class="small">30초 안에 영어 표현 맞히기 (10문제)</span>
+        </button>
+        <button class="gamecard" data-game="word" style="--c:var(--blue)">
+          <span class="mark"></span>
+          <span class="ico">📖</span>
+          <b>단어장 챌린지</b>
+          <span class="small">학습지 단어와 뜻 짝맞추기 (5라운드)</span>
+        </button>
+        <button class="gamecard" data-game="target" style="--c:var(--pink)">
+          <span class="mark"></span>
+          <span class="ico">🎯</span>
+          <b>대상 연결</b>
+          <span class="small">도움받는 사람과 UD 잇기 (10문제)</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="startbar">
+      <div class="status" id="startStatus">정보를 입력하고 게임을 골라주세요.</div>
+      <button id="start" class="primary" disabled>게임 시작</button>
+    </div>
+  </section>
+
+  <!-- ══ 플레이 ══ -->
+  <section id="play" class="card hidden">
+    <div class="hud">
+      <span class="gname" id="gameName"></span>
+      <span id="combo" class="chip combo hidden"></span>
+      <span id="timer" class="chip hidden"></span>
+      <span id="gameScore" class="chip">0 / 1,000</span>
+    </div>
+    <div class="dots" id="dots"></div>
+    <div class="arena" id="arena"></div>
+    <div class="feedback" id="toast"></div>
+  </section>
+
+  <!-- ══ 게임 사이 ══ -->
+  <section id="between" class="card hidden center">
+    <div class="eyebrow" style="color:var(--muted)">판 완료</div>
+    <h2 id="betweenTitle" style="margin:6px 0 14px"></h2>
+    <div id="betweenScore" class="bigscore"></div>
+    <p id="betweenMeta" class="metaline"></p>
+    <button id="nextGame" class="primary" style="margin-top:16px">다음 판 →</button>
+  </section>
+
+  <!-- ══ 결과 ══ -->
+  <section id="result" class="card hidden">
+    <div class="center">
+      <div class="eyebrow" style="color:var(--muted)">최종 결과</div>
+      <div class="gradebadge"><span class="g" id="gradeLetter">A</span></div>
+      <div class="gradelabel" id="gradeLabel"></div>
+      <h2 id="resultName" style="margin:16px 0 5px;font-size:20px"></h2>
+      <div class="small">랭킹점수 = 평균 점수 90점 + 도전 보너스 10점</div>
+      <div id="rankScore" class="bigscore" style="margin:6px 0"></div>
+      <div id="resultMeta" class="metaline"></div>
+      <div id="submitStatus" class="small" style="margin-top:12px"></div>
+    </div>
+
+    <div id="resultBoxes" class="resultgrid"></div>
+
+    <h3 style="font-size:19px;margin-bottom:12px">이 기기에 남은 기록</h3>
+    <div style="overflow:auto">
+      <table>
+        <thead><tr><th>이름</th><th>판수</th><th>총점</th><th>랭킹점수</th><th>정확도</th></tr></thead>
+        <tbody id="records"></tbody>
+      </table>
+    </div>
+    <p class="small" style="margin-top:8px">같은 기기·브라우저에서 끝낸 기록만 보입니다. 전체 순위는 랭킹판에서 확인하세요.</p>
+
+    <div class="startbar">
+      <div class="status">한 번 더 도전하면 더 높은 점수만 랭킹에 반영됩니다.</div>
+      <button class="primary" onclick="location.reload()">다시 하기</button>
+    </div>
+  </section>
+
+  <div class="credit">신일비즈니스고 최재연T</div>
+</div>
+
+<!-- ══ 랭킹판 ══ -->
+<div id="rankModal" class="modal hidden">
+  <div class="modalbox">
+    <div class="modalhead">
+      <div style="flex:1">
+        <h2>🏆 실시간 랭킹판</h2>
+        <div id="rankConn" class="conn">● 연결 중…</div>
+      </div>
+      <button id="closeLiveRank" class="rankbtn">✕ 닫기</button>
+    </div>
+    <div class="modalbody">
+      <div class="filters">
+        <button class="filter rank-filter on" data-filter="all">🌎 전체</button>
+        <button class="filter rank-filter" data-filter="class">🏫 우리 반</button>
+      </div>
+      <div id="rankScopeLabel" class="small" style="margin-bottom:10px"></div>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th>순위</th><th>학생</th><th>반</th><th>판수</th><th>랭킹점수</th><th>정확도</th></tr></thead>
+          <tbody id="liveRankRows"><tr><td colspan="6">불러오는 중…</td></tr></tbody>
+        </table>
+      </div>
+      <p class="small" style="margin-top:10px">같은 학번·이름으로 여러 번 도전하면 가장 높은 랭킹점수만 남습니다.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCFjDszgY6y69D4foHgOBLKsvpLyqAOOp0",
+  authDomain: "ud-game-ranking1.firebaseapp.com",
+  projectId: "ud-game-ranking1",
+  storageBucket: "ud-game-ranking1.firebasestorage.app",
+  messagingSenderId: "382644356191",
+  appId: "1:382644356191:web:2629610b69e0f0056a47ea"
+};
+
+let db=null, auth=null, firebaseReady=false, currentUid=null, firebaseBlocked=false;
+function setConn(t){
+  const el=document.getElementById("rankConn");
+  if(el) el.textContent=t;
+}
+if(typeof firebase==="undefined"){
+  // 미리보기 창·오프라인 등에서 외부 스크립트가 차단된 경우
+  firebaseBlocked=true;
+  setConn("● 오프라인 — 게임은 그대로 즐길 수 있어요");
+}else{
+  try{
+    firebase.initializeApp(firebaseConfig);
+    auth=firebase.auth();
+    db=firebase.firestore();
+    auth.signInAnonymously().catch(()=>setConn("● 로그인 대기 중"));
+    auth.onAuthStateChanged(user=>{
+      currentUid=user?user.uid:null;
+      firebaseReady=!!user;
+      setConn(firebaseReady ? "● 실시간 연결됨" : "● 연결 대기 중");
+    });
+  }catch(e){
+    firebaseBlocked=true;
+    setConn("● 오프라인 — 게임은 그대로 즐길 수 있어요");
+  }
+}
+</script>
+
+<script>
+const DATA=[
+  {ko:"점자블록",en:"Tactile Paving",meaning:"바닥의 돌기와 선으로 이동 방향·위험을 알려주는 시설",who:"시각장애인"},
+  {ko:"자동문",en:"Automatic Door",meaning:"문을 직접 밀거나 당기지 않아도 열리는 출입문",who:"휠체어 이용자·유아차 이용자"},
+  {ko:"경사로",en:"Ramp",meaning:"계단 대신 완만한 기울기로 높이 차를 이동하는 통로",who:"휠체어 이용자"},
+  {ko:"안전 손잡이",en:"Grab Bar",meaning:"몸의 균형을 잡고 일어서거나 이동할 때 잡는 손잡이",who:"노인·보행이 불편한 사람"},
+  {ko:"그림 메뉴판",en:"Picture Menu",meaning:"글자뿐 아니라 음식·음료를 그림으로 보여주는 메뉴",who:"글을 읽기 어려운 사람·외국인"},
+  {ko:"고대비 키오스크",en:"High-contrast Kiosk",meaning:"큰 글씨와 높은 명암 대비로 정보를 쉽게 읽게 한 키오스크",who:"저시력자"},
+  {ko:"시각 주문 알림",en:"Visual Order Alert",meaning:"소리뿐 아니라 화면·빛으로 주문 완료를 알려주는 장치",who:"청각장애인"},
+  {ko:"낮은 주문대",en:"Accessible Counter",meaning:"앉은 자세에서도 이용하기 쉽도록 낮춘 카운터",who:"휠체어 이용자·어린이"},
+  {ko:"큰 방향 안내표지",en:"Direction Signage",meaning:"큰 글씨·기호로 목적지와 이동 방향을 알려주는 안내",who:"낯선 방문객·저시력자"},
+  {ko:"촉지도",en:"Tactile Map",meaning:"손으로 만져 공간 배치와 이동 경로를 파악하는 지도",who:"시각장애인"},
+  {ko:"팔걸이 벤치",en:"Bench with Armrests",meaning:"앉고 일어설 때 팔로 몸을 지지할 수 있는 벤치",who:"노인·보행이 불편한 사람"},
+  {ko:"높이가 다른 음수대",en:"Multi-height Drinking Fountain",meaning:"서 있는 사람과 어린이·휠체어 이용자가 각자 편한 높이에서 쓰는 음수대",who:"어린이·휠체어 이용자"},
+  {ko:"낮은 사물함",en:"Low Locker",meaning:"키가 작거나 앉은 자세에서도 쉽게 사용할 수 있는 낮은 사물함",who:"어린이·휠체어 이용 학생"},
+  {ko:"픽토그램 안내",en:"Pictogram Signage",meaning:"글자와 함께 그림 기호를 사용해 장소를 쉽게 찾게 하는 안내",who:"저학년·외국인·글을 읽기 어려운 사람"},
+  {ko:"음향 신호기",en:"Audible Signal",meaning:"신호 변화나 안내를 소리로도 알려주는 장치",who:"시각장애인"},
+  {ko:"넓은 출입문",en:"Wide Doorway",meaning:"휠체어나 유아차도 통과하기 쉽도록 폭을 넓힌 문",who:"휠체어 이용자·유아차 이용자"}
+];
+
+/* 학습지 No.1 Key Words 단어장 (앞뒤면 32개) */
+const WORDS=[
+  {en:"universal design",ko:"보편적 디자인"},
+  {en:"design",ko:"디자인, 설계하다"},
+  {en:"product",ko:"제품"},
+  {en:"disability",ko:"장애"},
+  {en:"architect",ko:"건축가"},
+  {en:"wheelchair",ko:"휠체어"},
+  {en:"ramp",ko:"경사로"},
+  {en:"comfortably",ko:"편안하게"},
+  {en:"step",ko:"계단, 단"},
+  {en:"stroller",ko:"유모차"},
+  {en:"carry",ko:"나르다, 들다"},
+  {en:"push",ko:"밀다"},
+  {en:"grab",ko:"붙잡다, 쥐다"},
+  {en:"blind",ko:"눈이 먼"},
+  {en:"eyesight",ko:"시력"},
+  {en:"smoothly",ko:"부드럽게"},
+  {en:"bump",ko:"턱, 튀어나온 부분"},
+  {en:"braille",ko:"점자"},
+  {en:"principle",ko:"원칙"},
+  {en:"ability",ko:"능력"},
+  {en:"equitable",ko:"공평한"},
+  {en:"choice",ko:"선택"},
+  {en:"flexibility",ko:"유연함"},
+  {en:"understand",ko:"이해하다"},
+  {en:"intuitive",ko:"직관적인"},
+  {en:"information",ko:"정보"},
+  {en:"perceptible",ko:"인지할 수 있는"},
+  {en:"safe",ko:"안전한"},
+  {en:"tolerance",ko:"허용, 여유"},
+  {en:"strength",ko:"힘, 세기"},
+  {en:"effort",ko:"노력, 힘"},
+  {en:"space",ko:"공간"}
+];
+
+const GAMES={
+  link:{name:"🔗 3단 연결",color:"var(--purple)",total:5},
+  speed:{name:"⚡ 스피드 매치",color:"var(--orange)",total:10},
+  word:{name:"📖 단어장 챌린지",color:"var(--blue)",total:5},
+  target:{name:"🎯 대상 연결",color:"var(--pink)",total:10}
+};
+
+let want=0, selected=[], queue=[], gi=0;
+let score=0, correct=0, attempts=0, startedAt=0;
+let gameResults=[], timerId=null;
+let streak=0, bestStreak=0, locked=false, gameOver=false;
+
+/* ── 오류가 나면 화면 위에 바로 보여줍니다 ── */
+window.addEventListener("error",ev=>{
+  const bar=document.getElementById("errbar");
+  if(!bar) return;
+  bar.style.display="block";
+  bar.textContent="오류: "+(ev.message||ev.error)+" ("+(ev.lineno||"?")+"행)";
+});
+
+/* ── 효과음 : 오디오 파일 없이 브라우저가 직접 음을 만듭니다 ── */
+let actx=null, muted=false;
+try{ muted=localStorage.getItem("udMute")==="1"; }catch(e){}
+
+function audio(){
+  if(!actx){
+    try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; }
+  }
+  if(actx.state==="suspended") actx.resume();
+  return actx;
+}
+function tone(freq,dur,type="sine",vol=.18,delay=0){
+  if(muted) return;
+  const a=audio(); if(!a) return;
+  const t=a.currentTime+delay;
+  const o=a.createOscillator(), g=a.createGain();
+  o.type=type;
+  o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.linearRampToValueAtTime(vol,t+.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(a.destination);
+  o.start(t); o.stop(t+dur+.03);
+}
+const SFX={
+  tap:()=>tone(520,.05,"square",.06),
+  ok:()=>{tone(784,.13,"triangle",.2);tone(1047,.24,"triangle",.17,.09);},
+  no:()=>{tone(207,.16,"sawtooth",.13);tone(155,.26,"sawtooth",.11,.09);},
+  combo:()=>[0,1,2].forEach(i=>tone(880*Math.pow(1.26,i),.1,"square",.11,i*.06)),
+  tick:()=>tone(1300,.04,"square",.07),
+  link:()=>[659,880,1175].forEach((f,i)=>tone(f,.18,"triangle",.16,i*.07)),
+  done:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.3,"triangle",.15,i*.11)),
+  final:()=>[523,659,784,1047,1319].forEach((f,i)=>tone(f,.5,"triangle",.16,i*.13))
+};
+function applyMute(){
+  const b=document.getElementById("muteBtn");
+  b.textContent=muted?"🔇":"🔊";
+  b.classList.toggle("off",muted);
+  b.setAttribute("aria-pressed",muted?"true":"false");
+  try{ localStorage.setItem("udMute",muted?"1":"0"); }catch(e){}
+}
+document.addEventListener("pointerdown",()=>audio(),{once:true});
+
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
+const esc=v=>String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const escapeHtml=esc;
+
+/* ── 설정 화면 ── */
+function setWant(n){
+  want=Math.max(0,Math.min(4,n));
+  $$(".pick").forEach(x=>x.classList.toggle("on",+x.dataset.n===want));
+}
+
+/* 설정 화면의 탭은 문서 전체에서 위임 처리합니다.
+   버튼 하나하나에 붙이지 않으므로 어디서 실패해도 전부 죽지 않습니다. */
+function handlePick(el){
+  SFX.tap();
+  setWant(+el.dataset.n);
+  while(selected.length>want){
+    const g=selected.pop();
+    const card=document.querySelector(`.gamecard[data-game="${g}"]`);
+    if(card) card.classList.remove("on");
+  }
+  sync();
+}
+function handleGameCard(el){
+  SFX.tap();
+  const g=el.dataset.game;
+  if(el.classList.contains("on")){
+    el.classList.remove("on");
+    selected=selected.filter(x=>x!==g);
+    if(want>selected.length) setWant(selected.length);
+  }else{
+    if(selected.length>=4){
+      $("#startStatus").textContent="게임은 최대 4개까지 고를 수 있어요.";
+      return;
+    }
+    el.classList.add("on");
+    selected.push(g);
+    if(selected.length>want) setWant(selected.length);
+  }
+  sync();
+}
+
+document.addEventListener("click",e=>{
+  const t=e.target;
+  if(!t || !t.closest) return;
+  const pick=t.closest(".pick");
+  if(pick){ handlePick(pick); return; }
+  const card=t.closest(".gamecard");
+  if(card){ handleGameCard(card); return; }
+},true);
+
+function validStudent(){
+  return $("#grade").value.trim() && $("#classNo").value.trim() &&
+         $("#studentNo").value.trim() && $("#player").value.trim();
+}
+function sync(){
+  const ready = want>0 && selected.length===want && validStudent();
+  $("#start").disabled=!ready;
+  const st=$("#startStatus");
+  if(!selected.length) st.textContent=want?`게임 ${want}개를 고르세요.`:"도전할 게임을 골라주세요.";
+  else if(selected.length<want) st.textContent=`게임 ${want-selected.length}개 더 고르세요.`;
+  else if(!validStudent()) st.textContent="학년·반·번호·이름을 모두 입력하세요.";
+  else st.textContent=`${selected.length}판 도전 · 보너스 +${{1:0,2:3,3:6,4:10}[selected.length]}점`;
+  $("#chooseText").textContent = selected.length
+    ? `${selected.length}개 선택됨 · 최대 4개까지 고를 수 있어요.`
+    : "하고 싶은 게임을 눌러 고르세요. 최대 4개.";
+}
+["#grade","#classNo","#studentNo","#player"].forEach(s=>$(s).oninput=sync);
+
+$("#start").onclick=()=>{
+  audio(); SFX.link();
+  queue=[...selected];
+  $("#setup").classList.add("hidden");
+  gi=0; gameResults=[];
+  startGame();
+  window.scrollTo({top:0,behavior:"smooth"});
+};
+
+/* ── 공통 ── */
+function startGame(){
+  score=0; correct=0; attempts=0; streak=0; bestStreak=0;
+  locked=false; gameOver=false;
+  startedAt=Date.now();
+  const g=GAMES[queue[gi]];
+  document.documentElement.style.setProperty("--accent",g.color);
+  $("#play").classList.remove("hidden");
+  $("#between").classList.add("hidden");
+  $("#gameName").textContent=g.name;
+  $("#gameScore").textContent="0 / 1,000";
+  $("#timer").classList.add("hidden");
+  $("#timer").classList.remove("warn");
+  $("#combo").classList.add("hidden");
+  $("#toast").className="feedback";
+  $("#toast").textContent="";
+  renderDots(g.total,0);
+  run(queue[gi]);
+}
+
+function renderDots(total,done){
+  $("#dots").innerHTML=Array.from({length:total},(_,i)=>
+    `<span class="dot ${i<done?"done":i===done?"now":""}"></span>`).join("");
+}
+
+function setScore(v){
+  score=Math.max(0,Math.min(1000,Math.round(v)));
+  countUp($("#gameScore"),score,n=>`${n.toLocaleString()} / 1,000`);
+}
+
+function countUp(el,to,fmt){
+  const from=Number(String(el.dataset.v||0));
+  el.dataset.v=to;
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+  if(reduce){
+    el.textContent=fmt(to); return;
+  }
+  const t0=performance.now(),dur=550;
+  (function step(t){
+    const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
+    el.textContent=fmt(Math.round(from+(to-from)*e));
+    if(p<1) requestAnimationFrame(step);
+  })(t0);
+}
+
+function feedback(ok,msg){
+  (ok?SFX.ok:SFX.no)();
+  const el=$("#toast");
+  el.className="feedback "+(ok?"show-ok":"show-no");
+  el.textContent=(ok?"✓ ":"✗ ")+msg;
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>{el.className="feedback";el.textContent="";},900);
+}
+
+function bumpStreak(ok){
+  if(ok){
+    streak++; bestStreak=Math.max(bestStreak,streak);
+    const c=$("#combo");
+    if(streak>=2){c.classList.remove("hidden");c.textContent=`🔥 ${streak}연속`;}
+    if(streak>=3) setTimeout(SFX.combo,260);
+  }else{
+    streak=0;
+    $("#combo").classList.add("hidden");
+  }
+}
+
+/* 숫자키 1~4 */
+document.addEventListener("keydown",e=>{
+  if(!/^[1-4]$/.test(e.key)) return;
+  const b=document.querySelector(`.opt[data-idx="${+e.key-1}"]`);
+  if(b && !b.disabled) b.click();
+});
+
+function options(correctVal, pool){
+  return shuffle([correctVal,...shuffle(pool.filter(x=>x!==correctVal)).slice(0,3)]);
+}
+
+function mc(question, opts, ans, done, idx, total){
+  renderDots(total,idx);
+  locked=false;
+  $("#arena").innerHTML=`
+    <h2 class="qtitle">${question}</h2>
+    <div class="options">
+      ${opts.map((x,i)=>`
+        <button class="opt" data-idx="${i}" data-val="${esc(x)}">
+          <span class="key">${i+1}</span><span>${esc(x)}</span>
+        </button>`).join("")}
+    </div>`;
+  $$(".opt").forEach(b=>b.onclick=()=>{
+    if(locked) return;
+    locked=true;
+    attempts++;
+    const ok=b.dataset.val===ans;
+    $$(".opt").forEach(x=>{
+      x.disabled=true;
+      if(x.dataset.val===ans) x.classList.add("ok");
+    });
+    if(!ok) b.classList.add("no");
+    if(ok){correct++;}
+    bumpStreak(ok);
+    feedback(ok, ok?"정답":`정답은 ${ans}`);
+    setTimeout(()=>{if(!gameOver) done(ok);}, ok?520:900);
+  });
+}
+
+function finish(){
+  if(gameOver) return;
+  gameOver=true;
+  clearInterval(timerId);
+  $("#play").classList.add("hidden");
+  const sec=Math.round((Date.now()-startedAt)/1000);
+  const acc=attempts?Math.round(correct/attempts*100):0;
+  gameResults.push({game:queue[gi],score,acc,sec,streak:bestStreak});
+
+  $("#between").classList.remove("hidden");
+  $("#betweenTitle").textContent=`${GAMES[queue[gi]].name} 완료`;
+  $("#betweenScore").dataset.v=0;
+  countUp($("#betweenScore"),score,n=>`${n.toLocaleString()} / 1,000`);
+  $("#betweenMeta").innerHTML=
+    `정확도 <b>${acc}%</b> · 걸린 시간 <b>${sec}초</b> · 최고 연속 <b>${bestStreak}</b>`;
+  $("#nextGame").textContent=gi===queue.length-1?"최종 결과 보기 →":"다음 판 →";
+  SFX.done();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+$("#nextGame").onclick=()=>{
+  gi++;
+  if(gi<queue.length) startGame();
+  else finalResult();
+};
+
+function run(g){
+  if(g==="link") runLink();
+  if(g==="speed") runSpeed();
+  if(g==="word") runWord();
+  if(g==="target") runTarget();
+}
+
+/* ── 3단 연결 ── */
+function runLink(){
+  const total=GAMES.link.total;
+  let round=0;
+  function next(){
+    if(round>=total){ setScore(correct/total*1000); return finish(); }
+    locked=false;
+    const items=shuffle(DATA).slice(0,3);
+    const left=shuffle(items),mid=shuffle(items),right=shuffle(items);
+    let sel={};
+    renderDots(total,round);
+    $("#arena").innerHTML=`
+      <h2 class="qtitle">같은 것끼리 <span class="hl">한 줄로</span> 이어보세요</h2>
+      <div class="linkgrid">
+        <div class="col"><h3>한글</h3>
+          ${left.map(x=>`<div class="token" role="button" tabindex="0" data-k="ko" data-id="${esc(x.en)}">${esc(x.ko)}</div>`).join("")}</div>
+        <div class="col"><h3>English</h3>
+          ${mid.map(x=>`<div class="token" role="button" tabindex="0" data-k="en" data-id="${esc(x.en)}">${esc(x.en)}</div>`).join("")}</div>
+        <div class="col"><h3>뜻</h3>
+          ${right.map(x=>`<div class="token" role="button" tabindex="0" data-k="meaning" data-id="${esc(x.en)}">${esc(x.meaning)}</div>`).join("")}</div>
+      </div>`;
+
+    const pickToken=t=>{
+      if(locked) return;
+      const k=t.dataset.k;
+      $$(`.token[data-k="${k}"]`).forEach(x=>x.classList.remove("sel"));
+      t.classList.add("sel");
+      sel[k]=t.dataset.id;
+      if(sel.ko&&sel.en&&sel.meaning){
+        locked=true;
+        attempts++;
+        const ok=(sel.ko===sel.en&&sel.en===sel.meaning);
+        const chosen=$$(".token.sel");
+        chosen.forEach(x=>{x.classList.remove("sel");x.classList.add(ok?"ok":"no")});
+        bumpStreak(ok);
+        if(ok){
+          correct++;
+          feedback(true,"세 개가 이어졌어요");
+          setTimeout(SFX.link,120);
+          round++;
+          setTimeout(next,650);
+        }else{
+          feedback(false,"짝이 맞지 않아요");
+          setTimeout(()=>{
+            chosen.forEach(x=>x.classList.remove("no"));
+            sel={}; locked=false;
+          },800);
+        }
+      }
+    };
+    $$(".token").forEach(t=>{
+      t.onclick=()=>pickToken(t);
+      t.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pickToken(t);}};
+    });
+  }
+  locked=false;
+  next();
+}
+
+/* ── 스피드 매치 ── */
+function runSpeed(){
+  const total=GAMES.speed.total;
+  const qs=shuffle(DATA).slice(0,total);
+  let i=0,time=30;
+  const tEl=$("#timer");
+  tEl.classList.remove("hidden");
+  tEl.textContent=`⏱ ${time}초`;
+
+  timerId=setInterval(()=>{
+    time--;
+    tEl.textContent=`⏱ ${time}초`;
+    tEl.classList.toggle("warn",time<=10);
+    if(time<=10&&time>0) SFX.tick();
+    if(time<=0){
+      clearInterval(timerId);
+      locked=true;
+      setScore(correct/total*850);
+      feedback(false,"시간이 끝났어요");
+      finish();
+    }
+  },1000);
+
+  function next(){
+    if(i>=qs.length){
+      clearInterval(timerId);
+      setScore(correct/total*850 + Math.max(0,time)*5);
+      return finish();
+    }
+    const q=qs[i];
+    mc(`<span class="hl">${esc(q.ko)}</span> 의 영어 표현은?`,
+       options(q.en,DATA.map(x=>x.en)), q.en,
+       ()=>{i++;next();}, i, total);
+  }
+  next();
+}
+
+/* ── 단어장 챌린지 : 학습지 단어와 뜻 짝맞추기 ── */
+function runWord(){
+  const ROUNDS=GAMES.word.total, PER=4, TOTALPAIRS=ROUNDS*PER;
+  const pool=shuffle(WORDS);
+  let round=0, pairsDone=0, sel=null;
+
+  function next(){
+    if(round>=ROUNDS){
+      setScore(1000*TOTALPAIRS/Math.max(TOTALPAIRS,attempts));
+      return finish();
+    }
+    locked=false; sel=null;
+    renderDots(ROUNDS,round);
+    const items=pool.slice(round*PER,round*PER+PER);
+    const L=shuffle(items), R=shuffle(items);
+    $("#arena").innerHTML=`
+      <h2 class="qtitle">뜻이 맞는 짝을 <span class="hl">이어보세요</span></h2>
+      <div class="boardhead">
+        <span>학습지 No.1 단어장</span>
+        <span>${round+1} / ${ROUNDS} 라운드</span>
+      </div>
+      <div class="matchboard">
+        <div class="mcol">
+          <div class="lab">English</div>
+          ${L.map(w=>`<button class="mcard en" data-side="en" data-id="${esc(w.en)}">${esc(w.en)}</button>`).join("")}
+        </div>
+        <div class="mcol">
+          <div class="lab">뜻</div>
+          ${R.map(w=>`<button class="mcard" data-side="ko" data-id="${esc(w.en)}">${esc(w.ko)}</button>`).join("")}
+        </div>
+      </div>`;
+
+    const meaningOf=en=>{const w=WORDS.find(x=>x.en===en);return w?w.ko:"";};
+
+    $$(".mcard").forEach(el=>el.onclick=()=>{
+      if(locked||el.classList.contains("ok")) return;
+
+      // 같은 쪽을 다시 누르면 선택만 옮깁니다
+      if(!sel || sel.dataset.side===el.dataset.side){
+        if(sel) sel.classList.remove("sel");
+        sel=el; el.classList.add("sel"); SFX.tap();
+        return;
+      }
+
+      attempts++;
+      const a=sel, b=el, ok=(a.dataset.id===b.dataset.id);
+      sel=null;
+
+      if(ok){
+        correct++; pairsDone++;
+        [a,b].forEach(x=>{x.classList.remove("sel");x.classList.add("ok");x.disabled=true;});
+        bumpStreak(true);
+        feedback(true,`${a.dataset.id} = ${meaningOf(a.dataset.id)}`);
+        if(pairsDone%PER===0){
+          locked=true; round++;
+          setTimeout(()=>{if(!gameOver) next();},780);
+        }
+      }else{
+        locked=true;
+        [a,b].forEach(x=>{x.classList.remove("sel");x.classList.add("no");});
+        bumpStreak(false);
+        feedback(false,"짝이 아니에요");
+        setTimeout(()=>{
+          [a,b].forEach(x=>x.classList.remove("no"));
+          locked=false;
+        },620);
+      }
+    });
+  }
+  next();
+}
+
+/* ── 대상 연결 ── */
+function runTarget(){
+  const total=GAMES.target.total;
+  const qs=shuffle(DATA).slice(0,total);
+  let i=0;
+
+  function next(){
+    if(i>=qs.length){ setScore(correct/total*1000); return finish(); }
+    const q=qs[i];
+    const opts=options(q.ko,DATA.map(x=>x.ko));
+    renderDots(total,i);
+    $("#arena").innerHTML=`
+      <div class="target">
+        <div class="lab">특히 도움받는 사람</div>
+        <div class="who">${esc(q.who)}</div>
+      </div>
+      <div id="mcSlot"></div>`;
+    const slot=$("#mcSlot");
+    locked=false;
+    slot.innerHTML=`
+      <h2 class="qtitle">가장 관련 깊은 UD는?</h2>
+      <div class="options">
+        ${opts.map((x,n)=>`
+          <button class="opt" data-idx="${n}" data-val="${esc(x)}">
+            <span class="key">${n+1}</span><span>${esc(x)}</span>
+          </button>`).join("")}
+      </div>`;
+    $$(".opt").forEach(b=>b.onclick=()=>{
+      if(locked) return;
+      locked=true;
+      attempts++;
+      const ok=b.dataset.val===q.ko;
+      $$(".opt").forEach(x=>{x.disabled=true;if(x.dataset.val===q.ko)x.classList.add("ok")});
+      if(!ok) b.classList.add("no");
+      if(ok) correct++;
+      bumpStreak(ok);
+      feedback(ok, ok?"정답":`정답은 ${q.ko}`);
+      setTimeout(()=>{if(!gameOver){i++;next();}}, ok?520:900);
+    });
+  }
+  next();
+}
+
+/* ── 최종 결과 ── */
+function gradeOf(r){
+  if(r>=95) return {g:"S",label:"UD 마스터 — 거의 완벽합니다"};
+  if(r>=85) return {g:"A",label:"UD 전문가 — 아주 잘 알고 있어요"};
+  if(r>=70) return {g:"B",label:"UD 탐험가 — 대부분 맞혔어요"};
+  if(r>=50) return {g:"C",label:"UD 입문자 — 절반은 알고 있어요"};
+  return {g:"D",label:"다시 도전해볼까요"};
+}
+
+function finalResult(){
+  $("#between").classList.add("hidden");
+  $("#result").classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+
+  const total=gameResults.reduce((a,b)=>a+b.score,0);
+  const max=gameResults.length*1000;
+  const avgPct=total/max*100;
+  const bonus={1:0,2:3,3:6,4:10}[gameResults.length];
+  const rank=Math.min(100,avgPct*.9+bonus);
+  const acc=Math.round(gameResults.reduce((a,b)=>a+b.acc,0)/gameResults.length);
+  const gr=gradeOf(rank);
+
+  SFX.final();
+  $("#gradeLetter").textContent=gr.g;
+  $("#gradeLabel").textContent=gr.label;
+  $("#resultName").textContent=`${$("#player").value.trim()} 학생의 기록`;
+
+  $("#resultBoxes").innerHTML=gameResults.map(r=>`
+    <div class="scorebox" style="--c:${GAMES[r.game].color}">
+      <div class="t">${GAMES[r.game].name}</div>
+      <div class="v">${r.score.toLocaleString()}<small> / 1,000</small></div>
+      <div class="small">정확도 ${r.acc}% · ${r.sec}초</div>
+    </div>`).join("");
+
+  $("#rankScore").dataset.v=0;
+  countUp($("#rankScore"),Math.round(rank*10),n=>`${(n/10).toFixed(1)}점`);
+
+  $("#resultMeta").innerHTML=
+    `총점 <b>${total.toLocaleString()} / ${max.toLocaleString()}</b> · `+
+    `정확도 <b>${acc}%</b> · 도전 보너스 <b>+${bonus}</b>`;
+
+  const rec={
+    name:$("#player").value.trim(),
+    games:gameResults.length,
+    total,max,
+    rank:+rank.toFixed(1),
+    acc,
+    gameScores:Object.fromEntries(gameResults.map(r=>[r.game,r.score])),
+    date:new Date().toLocaleString()
+  };
+  lastFinalRecord=rec;
+  saveBestToFirebase(rec);
+
+  const arr=JSON.parse(localStorage.getItem("udRecords")||"[]");
+  arr.push(rec);
+  arr.sort((a,b)=>b.rank-a.rank||b.acc-a.acc||b.total-a.total);
+  localStorage.setItem("udRecords",JSON.stringify(arr.slice(0,50)));
+  renderRecords();
+}
+
+function renderRecords(){
+  const arr=JSON.parse(localStorage.getItem("udRecords")||"[]");
+  if(!arr.length){
+    $("#records").innerHTML='<tr><td colspan="5">아직 기록이 없습니다.</td></tr>';
+    return;
+  }
+  $("#records").innerHTML=arr.map((r,i)=>`
+    <tr>
+      <td>${i<3?["🥇","🥈","🥉"][i]:i+1} ${esc(r.name)}</td>
+      <td>${r.games}판</td>
+      <td>${r.total}/${r.max}</td>
+      <td><b>${r.rank.toFixed(1)}</b></td>
+      <td>${r.acc}%</td>
+    </tr>`).join("");
+}
+
+/* ── 실시간 랭킹 ── */
+let liveUnsub=null, rankFilter="all", lastFinalRecord=null;
+
+function studentMeta(){
+  const g=$("#grade")?.value.trim()||"";
+  const c=$("#classNo")?.value.trim()||"";
+  const n=$("#studentNo")?.value.trim()||"";
+  const name=$("#player")?.value.trim()||"";
+  return {grade:g,classNo:c,studentNo:n,name,
+    classKey:`${g}-${c}`,
+    studentKey:`${g}-${c}-${String(n).padStart(2,"0")}-${name}`};
+}
+function safeDocId(s){
+  return s.replace(/[\/.#$\[\]]/g,"_").replace(/\s+/g,"_").slice(0,120);
+}
+async function saveBestToFirebase(rec){
+  const status=$("#submitStatus");
+  if(status) status.textContent="랭킹판에 기록하는 중…";
+  if(!firebaseReady || !db){
+    if(status) status.textContent=firebaseBlocked
+      ? "이 기기에는 기록이 저장됐어요. 랭킹판에 올리려면 브라우저에서 파일을 열어주세요."
+      : "⚠ 서버 연결 전이라 저장하지 못했습니다. 잠시 후 랭킹판을 다시 열어보세요.";
+    return;
+  }
+  const m=studentMeta();
+  if(!m.name||!m.grade||!m.classNo||!m.studentNo) return;
+
+  const ref=db.collection("rankings").doc(safeDocId(m.studentKey));
+  try{
+    await db.runTransaction(async tx=>{
+      const snap=await tx.get(ref);
+      const now=firebase.firestore.FieldValue.serverTimestamp();
+      const payload={
+        studentKey:m.studentKey, grade:m.grade, classNo:m.classNo,
+        studentNo:m.studentNo, classKey:m.classKey, name:m.name,
+        games:rec.games, total:rec.total, max:rec.max,
+        rank:rec.rank, acc:rec.acc, gameScores:rec.gameScores,
+        updatedAt:now, ownerUid:currentUid
+      };
+      if(!snap.exists){
+        payload.createdAt=now;
+        tx.set(ref,payload);
+      }else{
+        const old=snap.data();
+        const better = rec.rank>Number(old.rank||0) ||
+          (rec.rank===Number(old.rank||0) && rec.acc>Number(old.acc||0));
+        if(better) tx.update(ref,payload);
+      }
+    });
+    if(status) status.textContent="✓ 랭킹판에 반영했습니다. 같은 학생은 최고점만 남습니다.";
+  }catch(e){
+    console.error(e);
+    if(status) status.textContent="⚠ 저장하지 못했습니다. Firestore 규칙과 익명 로그인 설정을 확인하세요.";
+  }
+}
+
+function openRankModal(){
+  $("#rankModal").classList.remove("hidden");
+  document.body.style.overflow="hidden";
+  startRankListener();
+}
+function closeRankModal(){
+  $("#rankModal").classList.add("hidden");
+  document.body.style.overflow="";
+  if(liveUnsub){liveUnsub();liveUnsub=null;}
+}
+function startRankListener(){
+  if(!firebaseReady||!db){
+    $("#liveRankRows").innerHTML=firebaseBlocked
+      ? '<tr><td colspan="6">지금은 랭킹 서버에 연결할 수 없습니다.<br>브라우저에서 파일을 열면 전체 순위를 볼 수 있어요.</td></tr>'
+      : '<tr><td colspan="6">서버에 연결하는 중입니다. 잠시 후 다시 열어주세요.</td></tr>';
+    return;
+  }
+  if(liveUnsub){liveUnsub();liveUnsub=null;}
+  let q=db.collection("rankings");
+  const m=studentMeta();
+  if(rankFilter==="class" && m.grade && m.classNo){
+    q=q.where("classKey","==",m.classKey);
+    $("#rankScopeLabel").textContent=`${m.grade}학년 ${m.classNo}반 순위`;
+  }else{
+    $("#rankScopeLabel").textContent="전체 참가자 순위";
+  }
+  liveUnsub=q.onSnapshot(snap=>{
+    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+    rows.sort((a,b)=>
+      Number(b.rank||0)-Number(a.rank||0) ||
+      Number(b.acc||0)-Number(a.acc||0) ||
+      String(a.name||"").localeCompare(String(b.name||"")));
+    renderLiveRank(rows);
+  },err=>{
+    console.error(err);
+    $("#liveRankRows").innerHTML='<tr><td colspan="6">순위를 불러오지 못했습니다. Firestore 규칙을 확인하세요.</td></tr>';
+  });
+}
+function renderLiveRank(rows){
+  const me=safeDocId(studentMeta().studentKey);
+  if(!rows.length){
+    $("#liveRankRows").innerHTML='<tr><td colspan="6">아직 기록이 없습니다. 첫 번째 도전자가 되어보세요.</td></tr>';
+    return;
+  }
+  $("#liveRankRows").innerHTML=rows.map((r,i)=>{
+    const isMe=r.id===me;
+    const medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":`${i+1}`;
+    return `<tr class="${isMe?"me":""}">
+      <td>${medal}</td>
+      <td>${esc(r.name||"")}${isMe?' <span class="small">(나)</span>':''}</td>
+      <td>${esc(r.grade||"")}-${esc(r.classNo||"")}</td>
+      <td>${Number(r.games||0)}판</td>
+      <td><b>${Number(r.rank||0).toFixed(1)}</b></td>
+      <td>${Number(r.acc||0)}%</td>
+    </tr>`;
+  }).join("");
+}
+
+$("#openLiveRank").onclick=openRankModal;
+$("#closeLiveRank").onclick=closeRankModal;
+$("#rankModal").addEventListener("click",e=>{if(e.target.id==="rankModal")closeRankModal();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#rankModal").classList.contains("hidden"))closeRankModal();});
+$$(".rank-filter").forEach(b=>b.onclick=()=>{
+  rankFilter=b.dataset.filter;
+  $$(".rank-filter").forEach(x=>x.classList.toggle("on",x===b));
+  startRankListener();
+});
+
+$("#muteBtn").onclick=()=>{
+  muted=!muted;
+  applyMute();
+  if(!muted){ audio(); SFX.tap(); }
+};
+applyMute();
+sync();
+</script>
+</body>
+</html>
