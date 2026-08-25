@@ -25,17 +25,6 @@
   --r:16px;
 }
 *{box-sizing:border-box}
-button,.token,.mcard{
-  touch-action:manipulation;
-  -webkit-tap-highlight-color:transparent;
-  -webkit-user-select:none;user-select:none;
-  -webkit-appearance:none;appearance:none;
-}
-#errbar{
-  position:fixed;left:0;right:0;top:0;z-index:99999;
-  background:#e5104a;color:#fff;font-size:13px;font-weight:700;
-  padding:9px 12px;display:none;word-break:break-all;
-}
 html,body{margin:0}
 body{
   background:var(--field);
@@ -267,30 +256,30 @@ h1,h2,h3{margin:0;font-weight:900;letter-spacing:-.02em}
 .token.no{background:var(--no);color:#fff;animation:shake .3s}
 @media(max-width:700px){.linkgrid{grid-template-columns:1fr}.col{margin-bottom:6px}}
 
-/* 단어 짝맞추기 보드 */
-.boardhead{
-  display:flex;justify-content:space-between;align-items:center;gap:10px;
-  margin-bottom:12px;font-size:14px;font-weight:900;color:var(--muted);
+/* Detective — 겹침 없는 그리드 배치 */
+.scene{
+  border:3px solid var(--ink);border-radius:14px;overflow:hidden;
 }
-.matchboard{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.mcol{display:flex;flex-direction:column;gap:10px}
-.mcol .lab{
-  font-size:13px;font-weight:900;text-align:center;padding:7px;
-  border-radius:9px;background:var(--ink);color:#fff;
+.scene .sky{
+  background:#dbe7ff;padding:11px 15px;font-size:14px;font-weight:900;
+  color:#33507f;border-bottom:3px solid var(--ink);
 }
-.mcard{
+.scene .room{
+  background:#f7f9fc;padding:16px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+}
+@media(max-width:600px){.scene .room{grid-template-columns:1fr 1fr}}
+.thing{
   border:3px solid var(--ink);border-radius:12px;background:#fff;
-  padding:14px 10px;min-height:64px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;text-align:center;
-  font-weight:800;font-size:17px;word-break:keep-all;line-height:1.35;
-  transition:transform .12s,box-shadow .12s,background .12s;
+  padding:18px 11px;cursor:pointer;font-weight:900;font-size:17px;
+  min-height:88px;display:grid;place-items:center;text-align:center;word-break:keep-all;
+  transition:transform .12s,box-shadow .12s;
 }
-.mcard.en{font-family:"Noto Sans KR",system-ui,sans-serif}
-.mcard:hover:not(.ok){transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--accent)}
-.mcard.sel{background:var(--yellow);transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
-.mcard.ok{background:var(--ok);color:#fff;opacity:.5;cursor:default;transform:none;box-shadow:none}
-.mcard.no{background:var(--no);color:#fff;animation:shake .3s}
-@media(max-width:420px){.mcard{font-size:15px;padding:12px 7px;min-height:58px}}
+.thing:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--accent)}
+.thing.ok{background:var(--ok);color:#fff}
+.thing.no{background:var(--no);color:#fff;animation:shake .3s}
+.scene .floor{height:16px;border-top:3px solid var(--ink);
+  background:radial-gradient(circle at 8px 8px,#111418 0 3.2px,transparent 3.6px) 0 0/16px 16px,var(--yellow)}
 
 /* Target */
 .target{
@@ -358,6 +347,11 @@ tr.me td{background:var(--yellow)}
   padding:10px 18px;font-weight:900;cursor:pointer;font-size:16px;
 }
 .filter.on{background:var(--ink);color:#fff}
+.classPick{
+  border:3px solid var(--ink);border-radius:999px;background:#fff;
+  padding:10px 18px;font-weight:900;cursor:pointer;font-size:16px;
+  min-width:220px;
+}
 .conn{font-size:14px;font-weight:900;color:var(--yellow)}
 
 .credit{
@@ -376,7 +370,6 @@ tr.me td{background:var(--yellow)}
 </head>
 <body>
 
-<div id="errbar"></div>
 <header class="signbar">
   <div class="sigil">UD</div>
   <div class="titles">
@@ -430,11 +423,11 @@ tr.me td{background:var(--yellow)}
           <b>스피드 매치</b>
           <span class="small">30초 안에 영어 표현 맞히기 (10문제)</span>
         </button>
-        <button class="gamecard" data-game="word" style="--c:var(--blue)">
+        <button class="gamecard" data-game="detective" style="--c:var(--blue)">
           <span class="mark"></span>
-          <span class="ico">📖</span>
-          <b>단어장 챌린지</b>
-          <span class="small">학습지 단어와 뜻 짝맞추기 (5라운드)</span>
+          <span class="ico">🕵️</span>
+          <b>UD 탐정</b>
+          <span class="small">설명을 보고 시설 찾아내기 (8문제)</span>
         </button>
         <button class="gamecard" data-game="target" style="--c:var(--pink)">
           <span class="mark"></span>
@@ -512,14 +505,18 @@ tr.me td{background:var(--yellow)}
     <div class="modalhead">
       <div style="flex:1">
         <h2>🏆 실시간 랭킹판</h2>
-        <div id="rankConn" class="conn">● 연결 중…</div>
+        <div id="rankConn" class="conn">연결 중…</div>
       </div>
       <button id="closeLiveRank" class="rankbtn">✕ 닫기</button>
     </div>
     <div class="modalbody">
       <div class="filters">
-        <button class="filter rank-filter on" data-filter="all">🌎 전체</button>
-        <button class="filter rank-filter" data-filter="class">🏫 우리 반</button>
+        <select id="gradePick" class="classPick" style="min-width:130px">
+          <option value="all">🌎 전체 학년</option>
+        </select>
+        <select id="classNoPick" class="classPick" style="min-width:150px">
+          <option value="all">전체 반</option>
+        </select>
       </div>
       <div id="rankScopeLabel" class="small" style="margin-bottom:10px"></div>
       <div style="overflow:auto">
@@ -546,30 +543,20 @@ const firebaseConfig = {
   appId: "1:382644356191:web:2629610b69e0f0056a47ea"
 };
 
-let db=null, auth=null, firebaseReady=false, currentUid=null, firebaseBlocked=false;
-function setConn(t){
-  const el=document.getElementById("rankConn");
-  if(el) el.textContent=t;
-}
-if(typeof firebase==="undefined"){
-  // 미리보기 창·오프라인 등에서 외부 스크립트가 차단된 경우
-  firebaseBlocked=true;
-  setConn("● 오프라인 — 게임은 그대로 즐길 수 있어요");
-}else{
-  try{
-    firebase.initializeApp(firebaseConfig);
-    auth=firebase.auth();
-    db=firebase.firestore();
-    auth.signInAnonymously().catch(()=>setConn("● 로그인 대기 중"));
-    auth.onAuthStateChanged(user=>{
-      currentUid=user?user.uid:null;
-      firebaseReady=!!user;
-      setConn(firebaseReady ? "● 실시간 연결됨" : "● 연결 대기 중");
-    });
-  }catch(e){
-    firebaseBlocked=true;
-    setConn("● 오프라인 — 게임은 그대로 즐길 수 있어요");
-  }
+let db=null, auth=null, firebaseReady=false, currentUid=null;
+try{
+  firebase.initializeApp(firebaseConfig);
+  auth=firebase.auth();
+  db=firebase.firestore();
+  auth.signInAnonymously().catch(console.error);
+  auth.onAuthStateChanged(user=>{
+    currentUid=user?user.uid:null;
+    firebaseReady=!!user;
+    const el=document.getElementById("rankConn");
+    if(el) el.textContent=firebaseReady ? "● 실시간 연결됨" : "● 연결 대기 중";
+  });
+}catch(e){
+  console.error(e);
 }
 </script>
 
@@ -593,46 +580,10 @@ const DATA=[
   {ko:"넓은 출입문",en:"Wide Doorway",meaning:"휠체어나 유아차도 통과하기 쉽도록 폭을 넓힌 문",who:"휠체어 이용자·유아차 이용자"}
 ];
 
-/* 학습지 No.1 Key Words 단어장 (앞뒤면 32개) */
-const WORDS=[
-  {en:"universal design",ko:"보편적 디자인"},
-  {en:"design",ko:"디자인, 설계하다"},
-  {en:"product",ko:"제품"},
-  {en:"disability",ko:"장애"},
-  {en:"architect",ko:"건축가"},
-  {en:"wheelchair",ko:"휠체어"},
-  {en:"ramp",ko:"경사로"},
-  {en:"comfortably",ko:"편안하게"},
-  {en:"step",ko:"계단, 단"},
-  {en:"stroller",ko:"유모차"},
-  {en:"carry",ko:"나르다, 들다"},
-  {en:"push",ko:"밀다"},
-  {en:"grab",ko:"붙잡다, 쥐다"},
-  {en:"blind",ko:"눈이 먼"},
-  {en:"eyesight",ko:"시력"},
-  {en:"smoothly",ko:"부드럽게"},
-  {en:"bump",ko:"턱, 튀어나온 부분"},
-  {en:"braille",ko:"점자"},
-  {en:"principle",ko:"원칙"},
-  {en:"ability",ko:"능력"},
-  {en:"equitable",ko:"공평한"},
-  {en:"choice",ko:"선택"},
-  {en:"flexibility",ko:"유연함"},
-  {en:"understand",ko:"이해하다"},
-  {en:"intuitive",ko:"직관적인"},
-  {en:"information",ko:"정보"},
-  {en:"perceptible",ko:"인지할 수 있는"},
-  {en:"safe",ko:"안전한"},
-  {en:"tolerance",ko:"허용, 여유"},
-  {en:"strength",ko:"힘, 세기"},
-  {en:"effort",ko:"노력, 힘"},
-  {en:"space",ko:"공간"}
-];
-
 const GAMES={
   link:{name:"🔗 3단 연결",color:"var(--purple)",total:5},
   speed:{name:"⚡ 스피드 매치",color:"var(--orange)",total:10},
-  word:{name:"📖 단어장 챌린지",color:"var(--blue)",total:5},
+  detective:{name:"🕵️ UD 탐정",color:"var(--blue)",total:8},
   target:{name:"🎯 대상 연결",color:"var(--pink)",total:10}
 };
 
@@ -640,14 +591,6 @@ let want=0, selected=[], queue=[], gi=0;
 let score=0, correct=0, attempts=0, startedAt=0;
 let gameResults=[], timerId=null;
 let streak=0, bestStreak=0, locked=false, gameOver=false;
-
-/* ── 오류가 나면 화면 위에 바로 보여줍니다 ── */
-window.addEventListener("error",ev=>{
-  const bar=document.getElementById("errbar");
-  if(!bar) return;
-  bar.style.display="block";
-  bar.textContent="오류: "+(ev.message||ev.error)+" ("+(ev.lineno||"?")+"행)";
-});
 
 /* ── 효과음 : 오디오 파일 없이 브라우저가 직접 음을 만듭니다 ── */
 let actx=null, muted=false;
@@ -704,45 +647,32 @@ function setWant(n){
   $$(".pick").forEach(x=>x.classList.toggle("on",+x.dataset.n===want));
 }
 
-/* 설정 화면의 탭은 문서 전체에서 위임 처리합니다.
-   버튼 하나하나에 붙이지 않으므로 어디서 실패해도 전부 죽지 않습니다. */
-function handlePick(el){
+$$(".pick").forEach(b=>b.onclick=()=>{
   SFX.tap();
-  setWant(+el.dataset.n);
+  setWant(+b.dataset.n);
+  // 목표보다 많이 골라뒀으면 뒤에서부터 해제
   while(selected.length>want){
     const g=selected.pop();
-    const card=document.querySelector(`.gamecard[data-game="${g}"]`);
-    if(card) card.classList.remove("on");
+    document.querySelector(`.gamecard[data-game="${g}"]`).classList.remove("on");
   }
   sync();
-}
-function handleGameCard(el){
+});
+
+$$(".gamecard").forEach(c=>c.onclick=()=>{
   SFX.tap();
-  const g=el.dataset.game;
-  if(el.classList.contains("on")){
-    el.classList.remove("on");
+  const g=c.dataset.game;
+  if(c.classList.contains("on")){
+    c.classList.remove("on");
     selected=selected.filter(x=>x!==g);
     if(want>selected.length) setWant(selected.length);
   }else{
-    if(selected.length>=4){
-      $("#startStatus").textContent="게임은 최대 4개까지 고를 수 있어요.";
-      return;
-    }
-    el.classList.add("on");
+    if(selected.length>=4) return;
+    c.classList.add("on");
     selected.push(g);
     if(selected.length>want) setWant(selected.length);
   }
   sync();
-}
-
-document.addEventListener("click",e=>{
-  const t=e.target;
-  if(!t || !t.closest) return;
-  const pick=t.closest(".pick");
-  if(pick){ handlePick(pick); return; }
-  const card=t.closest(".gamecard");
-  if(card){ handleGameCard(card); return; }
-},true);
+});
 
 function validStudent(){
   return $("#grade").value.trim() && $("#classNo").value.trim() &&
@@ -905,7 +835,7 @@ $("#nextGame").onclick=()=>{
 function run(g){
   if(g==="link") runLink();
   if(g==="speed") runSpeed();
-  if(g==="word") runWord();
+  if(g==="detective") runDetective();
   if(g==="target") runTarget();
 }
 
@@ -1005,72 +935,44 @@ function runSpeed(){
   next();
 }
 
-/* ── 단어장 챌린지 : 학습지 단어와 뜻 짝맞추기 ── */
-function runWord(){
-  const ROUNDS=GAMES.word.total, PER=4, TOTALPAIRS=ROUNDS*PER;
-  const pool=shuffle(WORDS);
-  let round=0, pairsDone=0, sel=null;
+/* ── UD 탐정 ── */
+function runDetective(){
+  const total=GAMES.detective.total;
+  const qs=shuffle(DATA).slice(0,total);
+  let i=0;
 
   function next(){
-    if(round>=ROUNDS){
-      setScore(1000*TOTALPAIRS/Math.max(TOTALPAIRS,attempts));
-      return finish();
-    }
-    locked=false; sel=null;
-    renderDots(ROUNDS,round);
-    const items=pool.slice(round*PER,round*PER+PER);
-    const L=shuffle(items), R=shuffle(items);
+    if(i>=qs.length){ setScore(correct/total*1000); return finish(); }
+    const q=qs[i];
+    const things=shuffle([q,...shuffle(DATA.filter(x=>x.en!==q.en)).slice(0,5)]);
+    renderDots(total,i);
+    locked=false;
     $("#arena").innerHTML=`
-      <h2 class="qtitle">뜻이 맞는 짝을 <span class="hl">이어보세요</span></h2>
-      <div class="boardhead">
-        <span>학습지 No.1 단어장</span>
-        <span>${round+1} / ${ROUNDS} 라운드</span>
-      </div>
-      <div class="matchboard">
-        <div class="mcol">
-          <div class="lab">English</div>
-          ${L.map(w=>`<button class="mcard en" data-side="en" data-id="${esc(w.en)}">${esc(w.en)}</button>`).join("")}
+      <h2 class="qtitle">이 설명에 맞는 시설을 찾으세요<br><span class="hl">${esc(q.meaning)}</span></h2>
+      <div class="scene">
+        <div class="sky">생활 공간 안의 UD 시설 6가지</div>
+        <div class="room">
+          ${things.map(x=>`<button class="thing" data-en="${esc(x.en)}">${esc(x.ko)}</button>`).join("")}
         </div>
-        <div class="mcol">
-          <div class="lab">뜻</div>
-          ${R.map(w=>`<button class="mcard" data-side="ko" data-id="${esc(w.en)}">${esc(w.ko)}</button>`).join("")}
-        </div>
+        <div class="floor"></div>
       </div>`;
 
-    const meaningOf=en=>{const w=WORDS.find(x=>x.en===en);return w?w.ko:"";};
-
-    $$(".mcard").forEach(el=>el.onclick=()=>{
-      if(locked||el.classList.contains("ok")) return;
-
-      // 같은 쪽을 다시 누르면 선택만 옮깁니다
-      if(!sel || sel.dataset.side===el.dataset.side){
-        if(sel) sel.classList.remove("sel");
-        sel=el; el.classList.add("sel"); SFX.tap();
-        return;
-      }
-
+    $$(".thing").forEach(b=>b.onclick=()=>{
+      if(locked) return;
       attempts++;
-      const a=sel, b=el, ok=(a.dataset.id===b.dataset.id);
-      sel=null;
-
+      const ok=b.dataset.en===q.en;
+      bumpStreak(ok);
       if(ok){
-        correct++; pairsDone++;
-        [a,b].forEach(x=>{x.classList.remove("sel");x.classList.add("ok");x.disabled=true;});
-        bumpStreak(true);
-        feedback(true,`${a.dataset.id} = ${meaningOf(a.dataset.id)}`);
-        if(pairsDone%PER===0){
-          locked=true; round++;
-          setTimeout(()=>{if(!gameOver) next();},780);
-        }
-      }else{
         locked=true;
-        [a,b].forEach(x=>{x.classList.remove("sel");x.classList.add("no");});
-        bumpStreak(false);
-        feedback(false,"짝이 아니에요");
-        setTimeout(()=>{
-          [a,b].forEach(x=>x.classList.remove("no"));
-          locked=false;
-        },620);
+        correct++;
+        b.classList.add("ok");
+        feedback(true,"찾았어요");
+        i++;
+        setTimeout(()=>{if(!gameOver) next();},600);
+      }else{
+        b.classList.add("no");
+        b.disabled=true;
+        feedback(false,"다른 시설이에요");
       }
     });
   }
@@ -1197,7 +1099,7 @@ function renderRecords(){
 }
 
 /* ── 실시간 랭킹 ── */
-let liveUnsub=null, rankFilter="all", lastFinalRecord=null;
+let liveUnsub=null, gradeFilter="all", classFilter="all", lastFinalRecord=null, lastRankRows=[];
 
 function studentMeta(){
   const g=$("#grade")?.value.trim()||"";
@@ -1215,9 +1117,7 @@ async function saveBestToFirebase(rec){
   const status=$("#submitStatus");
   if(status) status.textContent="랭킹판에 기록하는 중…";
   if(!firebaseReady || !db){
-    if(status) status.textContent=firebaseBlocked
-      ? "이 기기에는 기록이 저장됐어요. 랭킹판에 올리려면 브라우저에서 파일을 열어주세요."
-      : "⚠ 서버 연결 전이라 저장하지 못했습니다. 잠시 후 랭킹판을 다시 열어보세요.";
+    if(status) status.textContent="⚠ 서버 연결 전이라 저장하지 못했습니다. 잠시 후 랭킹판을 다시 열어보세요.";
     return;
   }
   const m=studentMeta();
@@ -1264,31 +1164,84 @@ function closeRankModal(){
 }
 function startRankListener(){
   if(!firebaseReady||!db){
-    $("#liveRankRows").innerHTML=firebaseBlocked
-      ? '<tr><td colspan="6">지금은 랭킹 서버에 연결할 수 없습니다.<br>브라우저에서 파일을 열면 전체 순위를 볼 수 있어요.</td></tr>'
-      : '<tr><td colspan="6">서버에 연결하는 중입니다. 잠시 후 다시 열어주세요.</td></tr>';
+    $("#liveRankRows").innerHTML='<tr><td colspan="6">서버에 연결하는 중입니다. 잠시 후 다시 열어주세요.</td></tr>';
     return;
   }
   if(liveUnsub){liveUnsub();liveUnsub=null;}
-  let q=db.collection("rankings");
-  const m=studentMeta();
-  if(rankFilter==="class" && m.grade && m.classNo){
-    q=q.where("classKey","==",m.classKey);
-    $("#rankScopeLabel").textContent=`${m.grade}학년 ${m.classNo}반 순위`;
-  }else{
-    $("#rankScopeLabel").textContent="전체 참가자 순위";
-  }
-  liveUnsub=q.onSnapshot(snap=>{
-    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
-    rows.sort((a,b)=>
-      Number(b.rank||0)-Number(a.rank||0) ||
-      Number(b.acc||0)-Number(a.acc||0) ||
-      String(a.name||"").localeCompare(String(b.name||"")));
-    renderLiveRank(rows);
+  liveUnsub=db.collection("rankings").onSnapshot(snap=>{
+    lastRankRows=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderRankUI();
   },err=>{
     console.error(err);
     $("#liveRankRows").innerHTML='<tr><td colspan="6">순위를 불러오지 못했습니다. Firestore 규칙을 확인하세요.</td></tr>';
   });
+}
+// 학년/반 표기가 "3"과 "03"처럼 다르게 입력돼도 같은 반으로 인식하도록 숫자 정규화
+function normNum(v){
+  const n=parseInt(String(v??"").trim(),10);
+  return Number.isNaN(n)?String(v??"").trim():n;
+}
+function classKeyOf(r){
+  return `${normNum(r.grade)}-${normNum(r.classNo)}`;
+}
+function updateClassOptions(rows){
+  // 1단계: 학년 목록
+  const gradeSel=$("#gradePick");
+  const grades=[...new Set(rows.map(r=>normNum(r.grade)))]
+    .filter(g=>g!==""&&g!==undefined&&g!==null)
+    .sort((a,b)=>a-b);
+  const curGrade=gradeSel.value||"all";
+  gradeSel.innerHTML=`<option value="all">🌎 전체 학년 (${rows.length}명)</option>`+
+    grades.map(g=>{
+      const cnt=rows.filter(r=>normNum(r.grade)===g).length;
+      return `<option value="${g}">${g}학년 (${cnt}명)</option>`;
+    }).join("");
+  if([...gradeSel.options].some(o=>o.value===curGrade)){
+    gradeSel.value=curGrade;
+  }else{
+    gradeSel.value="all";
+    gradeFilter="all";
+  }
+
+  // 2단계: 선택된 학년 안에서의 반 목록 (전체 학년이면 전체 반 기준)
+  const scoped = gradeFilter==="all" ? rows : rows.filter(r=>normNum(r.grade)===gradeFilter);
+  const classSel=$("#classNoPick");
+  const classNos=[...new Set(scoped.map(r=>normNum(r.classNo)))]
+    .filter(c=>c!==""&&c!==undefined&&c!==null)
+    .sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true}));
+  const curClass=classSel.value||"all";
+  classSel.innerHTML=`<option value="all">전체 반 (${scoped.length}명)</option>`+
+    classNos.map(c=>{
+      const cnt=scoped.filter(r=>normNum(r.classNo)===c).length;
+      return `<option value="${c}">🏫 ${c}반 (${cnt}명)</option>`;
+    }).join("");
+  if([...classSel.options].some(o=>o.value===curClass)){
+    classSel.value=curClass;
+  }else{
+    classSel.value="all";
+    classFilter="all";
+  }
+}
+function renderRankUI(){
+  updateClassOptions(lastRankRows);
+  const rows = lastRankRows.filter(r=>
+    (gradeFilter==="all"||normNum(r.grade)===gradeFilter) &&
+    (classFilter==="all"||normNum(r.classNo)===classFilter)
+  );
+  rows.sort((a,b)=>
+    Number(b.rank||0)-Number(a.rank||0) ||
+    Number(b.acc||0)-Number(a.acc||0) ||
+    String(a.name||"").localeCompare(String(b.name||"")));
+  if(gradeFilter==="all" && classFilter==="all"){
+    $("#rankScopeLabel").textContent="전체 참가자 순위";
+  }else if(classFilter==="all"){
+    $("#rankScopeLabel").textContent=`${gradeFilter}학년 전체 순위`;
+  }else if(gradeFilter==="all"){
+    $("#rankScopeLabel").textContent=`전체 학년 ${classFilter}반 순위`;
+  }else{
+    $("#rankScopeLabel").textContent=`${gradeFilter}학년 ${classFilter}반 순위`;
+  }
+  renderLiveRank(rows);
 }
 function renderLiveRank(rows){
   const me=safeDocId(studentMeta().studentKey);
@@ -1314,11 +1267,15 @@ $("#openLiveRank").onclick=openRankModal;
 $("#closeLiveRank").onclick=closeRankModal;
 $("#rankModal").addEventListener("click",e=>{if(e.target.id==="rankModal")closeRankModal();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#rankModal").classList.contains("hidden"))closeRankModal();});
-$$(".rank-filter").forEach(b=>b.onclick=()=>{
-  rankFilter=b.dataset.filter;
-  $$(".rank-filter").forEach(x=>x.classList.toggle("on",x===b));
-  startRankListener();
-});
+$("#gradePick").onchange=e=>{
+  gradeFilter=e.target.value;
+  classFilter="all"; // 학년을 바꾸면 반 선택은 초기화
+  renderRankUI();
+};
+$("#classNoPick").onchange=e=>{
+  classFilter=e.target.value;
+  renderRankUI();
+};
 
 $("#muteBtn").onclick=()=>{
   muted=!muted;
